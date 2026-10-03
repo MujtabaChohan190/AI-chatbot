@@ -1,6 +1,3 @@
-Got it. You want the **same simple style and structure** as your original README, just fully updated for the Day 3 version. No overly detailed documentation.
-
-Copy this entire thing into `README.md`:
 
 ````markdown
 # AI Chatbot
