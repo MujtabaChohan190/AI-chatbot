@@ -1,5 +1,3 @@
-
-````markdown
 # AI Chatbot
 
 A simple web-based AI chatbot built with Python, FastAPI, JavaScript, and the Google Gemini API. The chatbot allows users to send messages through a web interface, receives AI-generated responses, and maintains conversation history so the AI can understand previous messages.
@@ -53,7 +51,7 @@ ai-chatbot/
 ├── .gitignore
 ├── requirements.txt
 └── README.md
-````
+```
 
 ## How It Works
 
@@ -98,13 +96,10 @@ The chatbot maintains conversation history during the current session.
 Previous messages are stored as user and assistant messages:
 
 ```text
-User message
-      ↓
-AI response
-      ↓
-User message
-      ↓
-AI response
+[
+    { role: "user", content: "My name is Mujtaba." },
+    { role: "assistant", content: "Nice to meet you, Mujtaba." }
+]
 ```
 
 The previous conversation history is sent along with the current message so that Gemini can use the earlier messages as context.
@@ -116,7 +111,13 @@ message = current user message
 history = previous conversation
 ```
 
-The backend also limits the history to the most recent messages to prevent the request from continuously growing.
+The backend also limits the history to the most recent 10 messages:
+
+```python
+history = history[-10:]
+```
+
+This prevents the request from continuously growing and helps reduce unnecessary context usage.
 
 ## Input Validation
 
@@ -146,17 +147,17 @@ User messages are displayed using `textContent` so that user input is treated as
 
 The application includes error handling on both the frontend and backend.
 
-The frontend checks whether the API request was successful and displays an error message if something goes wrong.
+The frontend checks whether the API request was successful and displays an appropriate error message if something goes wrong.
 
 The backend catches errors from the Gemini API so that an API failure does not crash the application.
 
 The chatbot also uses a loading state while waiting for the AI response.
 
-The main.py file contains the FastAPI application and /chat endpoint.
+## API Integration
 
-The ai.py file uses the Google GenAI SDK to send the conversation and current user message to the Gemini model and returns the generated response.
+The Gemini API is accessed using Google's GenAI Python SDK.
 
-The cli.py file provides a command-line version of the chatbot using the same AI service.
+The API key is stored in a `.env` file:
 
 ```env
 GEMINI_API_KEY=your_api_key_here
@@ -231,6 +232,7 @@ You should see:
 
 ```text
 AI Chatbot
+
 Type 'exit' to quit.
 
 You:
@@ -273,7 +275,7 @@ Through this project, I learned how to:
 
 ### Gemini API Issues
 
-During development, some Gemini models were unavailable or returned API errors.
+During development, some Gemini models returned API errors or were unavailable.
 
 The application was updated to use an available Gemini model and includes error handling around API requests.
 
@@ -294,7 +296,7 @@ message = current user message
 history = previous conversation
 ```
 
-This prevents the same message from being sent to Gemini twice.
+This prevents the same message from being unnecessarily added to the conversation context twice.
 
 ## Security
 
@@ -321,10 +323,3 @@ Some possible improvements for the next version include:
 * Add rate limiting
 * Add logging and monitoring
 * Deploy the application to a cloud platform
-
-## Author
-
-Mujtaba Chohan
-
-```
-```
