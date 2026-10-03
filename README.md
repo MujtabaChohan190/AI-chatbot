@@ -155,11 +155,11 @@ The backend catches errors from the Gemini API so that an API failure does not c
 
 The chatbot also uses a loading state while waiting for the AI response.
 
-## API Integration
+The main.py file contains the FastAPI application and /chat endpoint.
 
-The Gemini API is accessed using Google's GenAI Python SDK.
+The ai.py file uses the Google GenAI SDK to send the conversation and current user message to the Gemini model and returns the generated response.
 
-The API key is stored in a `.env` file:
+The cli.py file provides a command-line version of the chatbot using the same AI service.
 
 ```env
 GEMINI_API_KEY=your_api_key_here

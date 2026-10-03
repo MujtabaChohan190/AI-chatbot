@@ -2,6 +2,8 @@ const chatForm = document.getElementById("chat-form");
 const messageInput = document.getElementById("message-input");
 const chatBox = document.getElementById("chat-box");
 
+let conversationHistory = [];
+
 
 function addMessage(message, sender) {
 
@@ -42,12 +44,9 @@ chatForm.addEventListener("submit", async (event) => {
     }
 
 
-    // Show user's message
     addMessage(message, "user");
 
-    // Clear input
     messageInput.value = "";
-
 
     const button = chatForm.querySelector("button");
 
@@ -66,28 +65,43 @@ chatForm.addEventListener("submit", async (event) => {
             },
 
             body: JSON.stringify({
-                message: message
+                message: message,
+                history: conversationHistory
             })
 
         });
 
 
         if (!response.ok) {
-            throw new Error("Failed to get AI response");
+
+            const errorData = await response.json();
+
+            throw new Error(
+            errorData.detail?.[0]?.msg || "Something went wrong."
+            );
         }
 
 
         const data = await response.json();
 
 
-        // Show AI response
         addMessage(data.response, "bot");
+
+        conversationHistory.push({
+            role: "user",
+            content: message
+        });
+
+        conversationHistory.push({
+            role: "assistant",
+            content: data.response
+        });
 
 
     } catch (error) {
 
         addMessage(
-            "Sorry, something went wrong. Please try again.",
+            error.message,
             "bot"
         );
 

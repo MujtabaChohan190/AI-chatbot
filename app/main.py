@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.ai import get_ai_response
 
@@ -16,8 +16,14 @@ app.mount(
 )
 
 
+class HistoryMessage(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=2000)
+    history: list[HistoryMessage]
 
 
 @app.get("/")
@@ -28,7 +34,10 @@ def home():
 @app.post("/chat")
 def chat(request: ChatRequest):
 
-    response = get_ai_response(request.message)
+    response = get_ai_response(
+        request.message,
+        request.history
+    )
 
     return {
         "response": response
