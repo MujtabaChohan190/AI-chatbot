@@ -11,7 +11,6 @@ function addMessage(message, sender) {
 
     messageElement.classList.add("message", sender);
 
-
     if (sender === "bot") {
 
         const html = marked.parse(message);
@@ -24,10 +23,11 @@ function addMessage(message, sender) {
 
     }
 
-
     chatBox.appendChild(messageElement);
 
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    return messageElement;
 }
 
 
@@ -35,23 +35,30 @@ chatForm.addEventListener("submit", async (event) => {
 
     event.preventDefault();
 
-
     const message = messageInput.value.trim();
-
 
     if (!message) {
         return;
     }
 
 
+    // Display user's message
     addMessage(message, "user");
 
     messageInput.value = "";
+
 
     const button = chatForm.querySelector("button");
 
     button.disabled = true;
     button.textContent = "Thinking...";
+
+
+    // Create an empty bot message.
+    // We will fill it as the response streams in.
+    const botMessageElement = addMessage("", "bot");
+
+    let botResponse = "";
 
 
     try {
@@ -74,19 +81,58 @@ chatForm.addEventListener("submit", async (event) => {
 
         if (!response.ok) {
 
-            const errorData = await response.json();
+            const errorText = await response.text();
 
             throw new Error(
-            errorData.detail?.[0]?.msg || "Something went wrong."
+                errorText || "Something went wrong."
             );
         }
 
 
-        const data = await response.json();
+        if (!response.body) {
+
+            throw new Error(
+                "Streaming is not supported by this response."
+            );
+        }
 
 
-        addMessage(data.response, "bot");
+        // Read the response stream
+        const reader = response.body.getReader();
 
+        const decoder = new TextDecoder();
+
+
+        while (true) {
+
+            const { value, done } = await reader.read();
+
+
+            if (done) {
+                break;
+            }
+
+
+            const chunk = decoder.decode(value, {
+                stream: true
+            });
+
+
+            botResponse += chunk;
+
+
+            // Render the response as it arrives
+            const html = marked.parse(botResponse);
+
+            botMessageElement.innerHTML =
+                DOMPurify.sanitize(html);
+
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+
+        // Save the completed conversation
         conversationHistory.push({
             role: "user",
             content: message
@@ -94,16 +140,13 @@ chatForm.addEventListener("submit", async (event) => {
 
         conversationHistory.push({
             role: "assistant",
-            content: data.response
+            content: botResponse
         });
 
 
     } catch (error) {
 
-        addMessage(
-            error.message,
-            "bot"
-        );
+        botMessageElement.textContent = error.message;
 
         console.error(error);
 
@@ -111,6 +154,8 @@ chatForm.addEventListener("submit", async (event) => {
 
         button.disabled = false;
         button.textContent = "Send";
+
+        messageInput.focus();
 
     }
 

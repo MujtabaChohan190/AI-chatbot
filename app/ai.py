@@ -12,16 +12,15 @@ client = genai.Client(
 )
 
 
-def get_ai_response(message: str, history) -> str:
+def get_ai_response(message: str, history):
 
     try:
+        # Keep only the most recent 10 messages
+        history = history[-10:]
 
         contents = []
 
-
         for item in history:
-
-            history = history[-10:]
 
             contents.append({
                 "role": "user" if item.role == "user" else "model",
@@ -32,7 +31,7 @@ def get_ai_response(message: str, history) -> str:
                 ]
             })
 
-
+        # Add the current user message
         contents.append({
             "role": "user",
             "parts": [
@@ -45,18 +44,19 @@ def get_ai_response(message: str, history) -> str:
         print("CONTENTS SENT TO GEMINI:")
         print(contents)
 
-
-        response = client.models.generate_content(
+        # Stream the response from Gemini
+        response = client.models.generate_content_stream(
             model="gemini-3.5-flash-lite",
             contents=contents
         )
 
+        for chunk in response:
 
-        return response.text
-
+            if chunk.text:
+                yield chunk.text
 
     except Exception as error:
 
         print(f"API Error: {error}")
 
-        return "Sorry, I could not get a response from the AI."
+        yield "Sorry, I could not get a response from the AI."

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.ai import get_ai_response
@@ -34,11 +34,12 @@ def home():
 @app.post("/chat")
 def chat(request: ChatRequest):
 
-    response = get_ai_response(
+    response_stream = get_ai_response(
         request.message,
         request.history
     )
 
-    return {
-        "response": response
-    }
+    return StreamingResponse(
+        response_stream,
+        media_type="text/plain"
+    )
